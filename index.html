@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<base href="/iumletter/">
+<title>이움레터</title>
+<meta name="description" content="이움레터 — 모바일 청첩장과 부고장을 한 곳에서 만드는 서비스">
+<meta name="theme-color" content="#8E2635">
+<link rel="icon" type="image/svg+xml" href="/iumletter/favicon.svg">
+<script src="/iumletter/app/router.js"></script>
+<script src="/iumletter/app/ium-phrases.js"></script>
+<script src="/iumletter/app/ium-ai.js"></script>
+<script src="/iumletter/app/ium-wedding-place.js"></script>
+<script src="/iumletter/app/ium-guide.js"></script>
+<script src="/iumletter/vendor/react.js"></script>
+<script src="/iumletter/vendor/react-dom.js"></script>
+<script src="/iumletter/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#FAF7F3;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.ium-svc{min-height:100vh}
+</style>
+</helmet>
+<div class="ium-shell">
+  <div class="ium-svc ium-svc-home" style="display: {{ disp.home }}"><dc-import name="svc-home"></dc-import></div>
+  <sc-if value="{{ on.wedding }}" hint-placeholder-val="{{ false }}">
+    <div class="ium-svc ium-svc-wedding" style="display: {{ disp.wedding }}"><dc-import name="svc-wedding"></dc-import></div>
+  </sc-if>
+  <sc-if value="{{ on.obituary }}" hint-placeholder-val="{{ false }}">
+    <div class="ium-svc ium-svc-obituary" style="display: {{ disp.obituary }}"><dc-import name="svc-obituary"></dc-import></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// 이움레터 루트: 현재 주소에 맞는 서비스를 보여주고, 한 번 연 서비스는 숨겨 둔 채 유지해
+// 홈에 다녀와도 입력 중이던 내용이 그대로 남도록 합니다.
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const svc = window.IUM ? window.IUM.service() : 'home';
+    const on = { home: true, wedding: svc === 'wedding', obituary: svc === 'obituary' };
+    this.state = { svc: svc, on: on };
+  }
+  componentDidMount() {
+    if (window.IUM) {
+      this.unsub = window.IUM.subscribe(() => {
+        const svc = window.IUM.service();
+        if (svc !== this.state.svc || !this.state.on[svc]) {
+          this.setState((st) => ({ svc: svc, on: Object.assign({}, st.on, { [svc]: true }) }));
+        }
+      });
+    }
+    // 첫 화면이 뜬 뒤 다른 서비스를 미리 불러 두어 전환을 빠르게
+    this.pre = setTimeout(() => this.setState({ on: { home: true, wedding: true, obituary: true } }), 1500);
+  }
+  componentWillUnmount() { if (this.unsub) this.unsub(); clearTimeout(this.pre); }
+  renderVals() {
+    const s = this.state.svc;
+    return {
+      on: this.state.on,
+      disp: { home: s === 'home' ? 'block' : 'none', wedding: s === 'wedding' ? 'block' : 'none', obituary: s === 'obituary' ? 'block' : 'none' }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# 이움레터 — Netlify 설정 (빌드 과정 없음: 이 폴더 자체가 배포 결과물입니다)
+[build]
+  publish = "."
+  command = ""
+
+# 새로고침·직접 접속 시에도 /wedding, /obituary 등 내부 주소가 열리도록 SPA 라우팅
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*.dc.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
